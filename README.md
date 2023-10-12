@@ -30,7 +30,7 @@ Now, you should be able to open your browser and access the Fabman POS at `http:
 
 Fabman POS was designed with the intention to be run on a Raspberry Pi with a touchscreen display. Below is an example of how the setup looks:
 
-*Your picture will go here*
+![HW-Setup](https://github.com/happylabHQ/fabman-pos/assets/1569255/4d9bcbe4-9ca6-43b7-baab-3a98f8ec5810)
 
 In order to run Fabman POS on startup, you will need to create a systemd service:
 
