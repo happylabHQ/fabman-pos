@@ -18,10 +18,11 @@ export default {
   methods: {
     barcodeReader(e) {
       const key = e.key;
-      const isNumeric = /^[0-9]+$/.test(key);
+      //const isNumeric = /^[0-9]+$/.test(key);
+      const isAlphaNumeric = /^[0-9a-zA-Z]$/.test(key);
       const isEnter = key === 'Enter';
 
-      if (isNumeric) {
+      if (isAlphaNumeric) {
         this.barcode += key;
       } else if (isEnter && this.barcode) {
         this.$emit('scanned', this.barcode);
