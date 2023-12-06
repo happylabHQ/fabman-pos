@@ -12,6 +12,18 @@
 Before you begin, ensure you have met the following requirements:
 
 - You have installed Node.js and npm.
+    ```
+    sudo apt-get update
+    sudo apt-get install -y ca-certificates curl gnupg
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+
+    NODE_MAJOR=20
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+
+    sudo apt-get update
+    sudo apt-get install nodejs -y
+    ```
 - You have a basic understanding of JavaScript and Node.js.
 
 ## Installation
@@ -33,7 +45,7 @@ During development you can start a development server with hot-reload enabled: `
 
 Fabman POS was designed with the intention to be run on a Raspberry Pi with a touchscreen display. Below is an example of how the setup looks:
 
-*Your picture will go here*
+![HW-Setup](https://github.com/happylabHQ/fabman-pos/assets/1569255/4d9bcbe4-9ca6-43b7-baab-3a98f8ec5810)
 
 In order to run Fabman POS on startup, you will need to create a systemd service:
 
