@@ -31,10 +31,10 @@
 
     <div class="row fixed-bottom" style="margin: 0px 20px 10px 0px;">
       <div class="col-4 d-grid">
-        <button @click="clearProducts" class="btn btn-danger btn-lg" type="button">Abbrechen</button>
+        <button @click="clearProducts" @keydown.enter.prevent class="btn btn-danger btn-lg" type="button">Abbrechen</button>
       </div>
       <div class="col-8 d-grid">
-        <button @click="setBridgePrice" class="btn btn-primary btn-lg" type="button" :disabled="totalPrice === 0">
+        <button @click="setBridgePrice" @keydown.enter.prevent class="btn btn-primary btn-lg" type="button" :disabled="totalPrice === 0">
           {{ formattedTotalPrice }}&nbsp;Bezahlen
         </button>
       </div>
@@ -61,7 +61,7 @@ export default {
       isLoading: false,
       errorMessage: '',
       errorMessageTimeout: 2000,
-      idleTimeout: 30000,
+      idleTimeout: 60000,
       idtleTimeoutId: null,
       isAdminPanelVisible: false,
       showThankYouMessage: false,
@@ -78,7 +78,7 @@ export default {
     },
     isProductListEmpty() {
       // Assuming your product list is an object where keys are SKUs
-      return Object.keys(this.products).length === 0;
+      return (!this.showThankYouMessage && Object.keys(this.products).length === 0);
     }
   },
   
@@ -98,9 +98,10 @@ export default {
       this.showThankYouMessage = true;
       this.isAdminPanelVisible = false;
 
+      this.clearProducts();
+
       setTimeout(() => {
         this.showThankYouMessage = false;
-        this.clearProducts();
       }, 5000);
     });
 
@@ -129,16 +130,22 @@ export default {
     resetIdleTimeout() {
       clearTimeout(this.idleTimeoutId);
       this.idleTimeoutId = setTimeout(() => {
+        //console.log("IDLE TIMEOUT");
         this.clearProducts();
+        
+        // reload browser
+        window.location.reload();
       }, this.idleTimeout);
     },
 
     async fetchProduct(barcode) {
-
       console.log("read barcode " + barcode);
 
+      //console.log("Produkte vor fetch products");
+      //console.log(this.products);
+
       this.isLoading = true;
-      axios.get('http://localhost:3000/products', {
+      await axios.get('http://localhost:3000/products', {
         params: {
           barcode: barcode,
         },
@@ -149,12 +156,14 @@ export default {
         if (!this.products[response.data.sku]) {
           var newProduct = response.data;
           newProduct.amount = 1;
-          this.products = { ...this.products, [response.data.sku]: newProduct };
+          this.products[response.data.sku] = newProduct;
+          //this.products = { ...this.products, [response.data.sku]: newProduct };
         } else {
           this.products[response.data.sku].amount += 1;
           this.products[response.data.sku].price += response.data.price;
         }
-        
+        //console.log("Produkte vor set Bridge Price");
+        //console.log(this.products);
         this.setBridgePrice();
         this.isLoading = false;
         this.errorMessage = ''; // clear error message if successful
@@ -171,11 +180,12 @@ export default {
 
     removeProduct(sku) {
       delete this.products[sku];
-      this.products = { ...this.products };
+      //this.products = { ...this.products };
       this.setBridgePrice();
     },
     
     clearProducts() {
+      //console.log("CLEAR PRODUCTS");
       if (this.products) {
         this.products = {};
         this.setBridgePrice();

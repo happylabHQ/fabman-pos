@@ -7,7 +7,13 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require('socket.io');
-const io = new Server(server);
+//const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
 const path = require('path');
 
 const port = 3000;
@@ -24,7 +30,6 @@ let productList = null;
 let resourceLog = null;
 
 let bridgeData = null;
-
 
 // Serve static files from the Vue app
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -44,6 +49,14 @@ app.get('/products', async (req, res) => {
     const response = await axios.get(`${process.env.VEND_API_URL}/api/2.0/search?type=products&sku=${barcode}`, options);
   
     if (response.data.total_count > 0) {
+      // additional API call to get tax_id
+      const productDetails = await axios.get(`${process.env.VEND_API_URL}/api/3.0/products/${response.data.data[0].id}`, options);
+      response.data.data[0].tax_id = productDetails.data.data.price_standard.tax_id;
+
+      // additional API call to get tax information
+      const taxDetails = await axios.get(`${process.env.VEND_API_URL}/api/taxes/${response.data.data[0].tax_id}`, options);
+      response.data.data[0].tax_rate = taxDetails.data.tax.rate;
+
       res.json(response.data.data[0]);
     } 
     else {
@@ -71,13 +84,20 @@ app.post('/bridge', (req, res) => {
     price += product.price_including_tax * product.amount;
   });
 
+  const sendResponse = (data) => {
+    res.json(data);
+    res.end();
+  };
+
   // If the price is 0, stop polling and clear the bridgePriceSetAt variable
   if (price === 0) {
     console.log("cleared");
     clearInterval(pollingIntervalId);
     bridgePriceSetAt = null;
     fabmanSetDisplay("Zahlungsterminal");
-    return res.status(200).send('Polling stopped');
+    
+    sendResponse({ status: "Polling started" });
+    return;
   }
 
   // display on bridge
@@ -92,11 +112,6 @@ app.post('/bridge', (req, res) => {
   }
 
   const pollInterval = 1000;
-
-  const sendResponse = (data) => {
-    res.json(data);
-    res.end();
-  };
 
   // Start the polling interval
   pollingIntervalId = setInterval(() => {
@@ -178,6 +193,8 @@ const createPayment = (paymenttype) => {
   productList = null;
   resourceLog = null;
 
+  fabmanSetDisplay("Zahlungsterminal");
+
   io.emit('payment successful');
 };
 
@@ -244,7 +261,7 @@ function closeVendSale(saleType = "MicroPOS", status = "CLOSED") {
         quantity: product.amount,
         price: product.price_excluding_tax,
         tax: product.price_including_tax - product.price_excluding_tax,
-        tax_id: process.env.TAX_ID,
+        tax_id: product.tax_id //process.env.TAX_ID,
       });
       totalCost += product.amount * product.price_including_tax;
   }
@@ -284,7 +301,7 @@ function closeVendSale(saleType = "MicroPOS", status = "CLOSED") {
     },
   })
   .then(response => {
-    console.log(response.data);
+    //console.log(response.data);
   })
   .catch(error => {
     console.error('Error while closing sale:', error);
@@ -302,6 +319,7 @@ const closeFabmanSale = async (productList, resourceLog) => {
           currency: "EUR"
         }).format(product.price_including_tax)}`,
         price: product.amount * product.price_including_tax,
+        taxPercent: (product.tax_rate*100),
         resourceLog: resourceLog.id
       };
 

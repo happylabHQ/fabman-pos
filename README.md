@@ -26,6 +26,9 @@ To get the Fabman POS up and running, follow these steps:
 
 Now, you should be able to open your browser and access the Fabman POS at `http://localhost:3000`.
 
+During development you can start a development server with hot-reload enabled: `node run serve` 
+
+
 ## Running on Raspberry Pi
 
 Fabman POS was designed with the intention to be run on a Raspberry Pi with a touchscreen display. Below is an example of how the setup looks:
@@ -55,7 +58,12 @@ In order to run Fabman POS on startup, you will need to create a systemd service
     [Install]
     WantedBy=multi-user.target
     ```
-    
+
+    After adding or changing the file reload systemctl 
+    ```
+    sudo systemctl daemon-reload
+    ```
+
 3. **Enable the service:** Enable the service to be run at startup using the command:
     ```
     sudo systemctl enable fabman-pos.service
