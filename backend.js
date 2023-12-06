@@ -51,11 +51,37 @@ app.get('/products', async (req, res) => {
     if (response.data.total_count > 0) {
       // additional API call to get tax_id
       const productDetails = await axios.get(`${process.env.VEND_API_URL}/api/3.0/products/${response.data.data[0].id}`, options);
-      response.data.data[0].tax_id = productDetails.data.data.price_standard.tax_id;
+      //console.log(productDetails.data.data);
 
-      // additional API call to get tax information
-      const taxDetails = await axios.get(`${process.env.VEND_API_URL}/api/taxes/${response.data.data[0].tax_id}`, options);
-      response.data.data[0].tax_rate = taxDetails.data.tax.rate;
+      let taxId;
+
+      if (!productDetails.data.data.variants || productDetails.data.data.variants.length === 0) {
+        // Check if price_standard and tax_id exist before assigning
+        if (productDetails.data.data.price_standard && productDetails.data.data.price_standard.tax_id) {
+            taxId = productDetails.data.data.price_standard.tax_id;
+        }
+      } 
+      else {
+          // Find the variant with the matching id
+          const variant = productDetails.data.data.variants.find(v => v.id === response.data.data[0].id);
+      
+          // Check if price_standard and tax_id exist in the found variant before assigning
+          if (variant && variant.price_standard && variant.price_standard.tax_id) {
+              taxId = variant.price_standard.tax_id;
+          }
+      }
+
+      if (taxId !== undefined) {
+        response.data.data[0].tax_id = taxId;
+
+        // additional API call to get tax information
+        const taxDetails = await axios.get(`${process.env.VEND_API_URL}/api/taxes/${response.data.data[0].tax_id}`, options);
+        response.data.data[0].tax_rate = taxDetails.data.tax.rate;
+      } 
+      else {
+          // Handle case where tax_id is not found
+          console.log("Tax ID not found");
+      }
 
       res.json(response.data.data[0]);
     } 
