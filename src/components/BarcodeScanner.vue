@@ -1,5 +1,8 @@
 <template>
-  <div></div>
+  <div>
+    <!-- Hidden text input to capture barcode scanner input -->
+    <input type="text" ref="barcodeInput" style="position: absolute; opacity: 0; pointer-events: none;" @keyup.enter="handleBarcode">
+  </div>
 </template>
 
 <script>
@@ -9,25 +12,31 @@ export default {
       barcode: '',
     };
   },
-  created() {
-    window.addEventListener('keyup', this.barcodeReader);
+  mounted() {
+    // Listen for any keydown event on the window
+    window.addEventListener('keydown', this.maybeRefocusInput);
   },
   unmounted() {
-    window.removeEventListener('keyup', this.barcodeReader);
+    // Clean up the event listener when the component is destroyed
+    window.removeEventListener('keydown', this.maybeRefocusInput);
   },
   methods: {
-    barcodeReader(e) {
-      const key = e.key;
-      //const isNumeric = /^[0-9]+$/.test(key);
-      const isAlphaNumeric = /^[0-9a-zA-Z]$/.test(key);
-      const isEnter = key === 'Enter';
-
-      if (isAlphaNumeric) {
-        this.barcode += key;
-      } else if (isEnter && this.barcode) {
-        this.$emit('scanned', this.barcode);
-        this.barcode = '';
+    maybeRefocusInput() {
+      // Refocus the input if it's not already focused
+      if (this.$refs.barcodeInput && document.activeElement !== this.$refs.barcodeInput) {
+        this.$refs.barcodeInput.focus();
       }
+    },
+    handleBarcode() {
+      // Retrieve the barcode value from the hidden input
+      this.barcode = this.$refs.barcodeInput.value.toLowerCase();
+      
+      // Emit the scanned barcode and reset the input
+      this.$emit('scanned', this.barcode);
+      this.$refs.barcodeInput.value = '';
+
+      // Refocus the input for the next scan
+      this.maybeRefocusInput();
     },
   },
 };
