@@ -1,7 +1,9 @@
 <template>
   <div id="app" class="container">
     <barcode-scanner @scanned="fetchProduct" />
-    <product-list :products="products" @remove-product="removeProduct" />
+    <product-list :products="products" :isAdminMode="isAdminMode" @remove-product="removeProduct"
+                                                                  @update-product-amount="updateProductAmount"
+    />
     
     <div v-if="isLoading" class="text-center">
       <div class="spinner-border text-primary" role="status"></div>
@@ -65,7 +67,17 @@ export default {
       idtleTimeoutId: null,
       isAdminPanelVisible: false,
       showThankYouMessage: false,
+      isAdminMode: false,
     };
+  },
+
+  async created() {
+    try {
+      const config = await axios.get('config.json');
+      this.isAdminMode = config.data.adminMode;
+    } catch (error) {
+      console.error('Error loading configuration:', error);
+    }
   },
 
   computed: {
@@ -181,6 +193,13 @@ export default {
     removeProduct(sku) {
       delete this.products[sku];
       //this.products = { ...this.products };
+      this.setBridgePrice();
+    },
+
+    updateProductAmount({ sku, amount }) {
+      // Update the product amount here
+      this.products[sku].amount = amount;
+
       this.setBridgePrice();
     },
     

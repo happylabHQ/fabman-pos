@@ -11,7 +11,11 @@
     </thead>
     <tbody>
       <tr v-for="(product, sku) in products" :key="sku">
-        <td>{{ product.amount }}</td>
+        <td class="text-nowrap">
+          <button type="button" class="btn btn-outline-primary btn-lg me-2" v-if="isAdminMode" @click="decrementProduct(sku, product)">-</button>
+          {{ product.amount }}
+          <button type="button" class="btn btn-outline-primary btn-lg ms-2" v-if="isAdminMode" @click="incrementProduct(sku, product)">+</button>
+        </td>
         <td>{{ product.variant_name }}</td>
         <td>{{ new Intl.NumberFormat("de-DE", {style: "currency", currency: "EUR"}).format(product.amount * product.price_including_tax) }}</td>
         <td>
@@ -29,11 +33,21 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    isAdminMode: Boolean
   },
+
   methods: {
     emitRemoveProduct(sku) {
       this.$emit('remove-product', sku);
     },
+
+    incrementProduct(sku, product) {
+      this.$emit('update-product-amount', { sku, amount: product.amount + 1 });
+    },
+
+    decrementProduct(sku, product) {
+      this.$emit('update-product-amount', { sku, amount: product.amount - 1 });
+    }
   },
 };
 </script>

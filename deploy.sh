@@ -15,7 +15,7 @@ deploy_to_pi() {
 
     # Use rsync to upload everything to the Raspberry Pi
     echo "Uploading app to Raspberry Pi ${PI_IP}..."
-    rsync -avz --exclude=node_modules --exclude=.git --exclude=src --exclude=.env . pi@${PI_IP}:~/fabman-pos
+    rsync -avz --exclude=node_modules --exclude=.git --exclude=src --exclude=.env --exclude=public/config.json . pi@${PI_IP}:~/fabman-pos
 
     # Run commands on the remote server
     echo "Restarting micropos.service on the Raspberry Pi ${PI_IP}..."
