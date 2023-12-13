@@ -38,7 +38,7 @@ To get the Fabman POS up and running, follow these steps:
 
 Now, you should be able to open your browser and access the Fabman POS at `http://localhost:3000`.
 
-During development you can start a development server with hot-reload enabled: `node run serve` 
+During development you can start a development server with hot-reload enabled: `npm run serve` 
 
 
 ## Running on Raspberry Pi
